@@ -26,6 +26,7 @@ class StopRequest(Request):
     def fetch(self):
         super()
         STOP_URL = "http://v6.bvg.transport.rest/locations"
+        print(f"Fetching {STOP_URL}...")
         parameters = {"query": self.key, "stops": "true", "adresses": "false", "poi": "false", "linesOfStops": "true"}
         request = requests.get(STOP_URL, parameters)
         self.response = [location for location in request.json() if location["type"] == "stop"][0]
@@ -56,13 +57,14 @@ class DepartureRequest(Request):
     def fetch(self):
         super()
         DEPARTURES_URL = f"http://v6.bvg.transport.rest/stops/{self.station.id}/departures"
+        print(f"Fetching {DEPARTURES_URL}...")
         parameters = {"when": self.time, "duration": self.duration, "linesOfStops": "true"}
         request = requests.get(DEPARTURES_URL, parameters)
         self.response = request.json()
         return self.response
 
     def serialize(self):
-        return self.response["departures"][:]["tripId"]
+        return [station["tripId"] for station in self.response["departures"]]
 
 
    # self.response = {'departures': [{'tripId': '1|35003|9|86|16032023', 'stop': {'type': 'stop', 'id': '900023101', 'name': 'U Ernst-Reuter-Platz (Berlin)', 'location': {'type': 'location', 'id': '900023101', 'latitude': 52.511584, 'longitude': 13.32258}, 'products': {'suburban': False, 'subway': True, 'tram': False, 'bus': True, 'ferry': False, 'express': False, 'regional': False}, 'lines': [{'type': 'line', 'id': 'u2', 'fahrtNr': None, 'name': 'U2', 'public': True, 'productName': 'U', 'mode': 'train', 'product': 'subway'}, {'type': 'line', 'id': '245', 'fahrtNr': None, 'name': '245', 'public': True, 'productName': 'Bus', 'mode': 'bus', 'product': 'bus'}, {'type': 'line', 'id': 'm45', 'fahrtNr': None, 'name': 'M45', 'public': True, 'productName': 'Bus', 'mode': 'bus', 'product': 'bus'}, {'type': 'line', 'id': 'n2', 'fahrtNr': None, 'name': 'N2', 'public': True, 'productName': 'Bus', 'mode': 'bus', 'product': 'bus'}], 'stationDHID': 'de:11000:900023101'}, 'when': '2023-03-16T15:02:00+01:00', 'plannedWhen': '2023-03-16T15:00:00+01:00', 'delay': 120, 'platform': None, 'plannedPlatform': None, 'prognosisType': 'prognosed', 'direction': 'Spandau, Johannesstift', 'provenance': None, 'line': {'type': 'line', 'id': 'm45', 'fahrtNr': '46085', 'name': 'M45', 'public': True, 'adminCode': 'BVB---', 'productName': 'Bus', 'mode': 'bus', 'product': 'bus', 'operator': {'type': 'operator', 'id': 'berliner-verkehrsbetriebe', 'name': 'Berliner Verkehrsbetriebe'}}, 'remarks': [{'type': 'hint', 'code': 'bf', 'text': 'barrierefrei'}], 'origin': None, 'destination': {'type': 'stop', 'id': '900027201', 'name': 'Johannesstift (Berlin)', 'location': {'type': 'location', 'id': '900027201', 'latitude': 52.566715, 'longitude': 13.192623}, 'products': {'suburban': False, 'subway': False, 'tram': False, 'bus': True, 'ferry': False, 'express': False, 'regional': False}, 'stationDHID': 'de:11000:900027201'}, 'currentTripPosition': {'type': 'location', 'latitude': 52.51322, 'longitude': 13.321987}, 'occupancy': 'high'} # ,
@@ -98,10 +100,10 @@ class ConnectionRequest(Request):
     def fetch(self):
         super()
         LINE_URL = f"http://v6.bvg.transport.rest/trips/{self.id}"
+        print(f"Fetching {LINE_URL}...")
         parameters = {}
         request = requests.get(LINE_URL, parameters)
         self.response = request.json()
-        print(self.response)
         return self.response
 
     def serialize(self):
@@ -109,12 +111,12 @@ class ConnectionRequest(Request):
         name = self.response["trip"]["line"]["name"]
         type = self.response["trip"]["line"]["productName"]
         route = []
-        for stop in self.response["trip"]["stopovers"]:
-            stop_id = stop["stop"]["id"]
-            stop_name = stop["stop"]["name"]
-            stop_location = [stop["stop"]["location"]["latitude"], stop["stop"]["location"]["longitude"]]
-            stop = stop.Stop(stop_id, stop_name, stop_location)
-            route.append(stop)
+        for stopover in self.response["trip"]["stopovers"]:
+            stop_id = stopover["stop"]["id"]
+            stop_name = stopover["stop"]["name"]
+            stop_location = [stopover["stop"]["location"]["latitude"], stopover["stop"]["location"]["longitude"]]
+            new_stop = stop.Stop(stop_id, stop_name, stop_location)
+            route.append(new_stop)
 
         return trip.Connection(id, name, type, route)
 

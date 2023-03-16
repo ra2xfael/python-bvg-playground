@@ -8,4 +8,5 @@ class Connection:
         self.route = route
 
     def __repr__(self):
-        return "[" + str(self.id) + ": " + str(self.name) + " " + str(self.location) + "]"
+        #return "[" + str(self.id) + ": " + str(self.name) + " " + self.location + "]"
+        return f"[{self.name} ({self.id}) [{self.type}]"

@@ -26,9 +26,7 @@ def load_connection(id):
 
 def add_stops(stops):
     with lock:
-
-        serialized_stops.append(stop)
-
+        pass
 
 def add_connection(connections):
     with lock:

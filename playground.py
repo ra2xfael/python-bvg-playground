@@ -7,8 +7,6 @@ request_handler.fetch_stop("Helene-Weigel")
 
 queue_thread = threading.Thread(target=request_handler.process_queue)
 queue_thread.start()
-update_thread = threading.Thread(target=loader.synchronize_fetched_data())
-update_thread.start()
 
 while True:
     input()

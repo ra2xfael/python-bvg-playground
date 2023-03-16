@@ -14,6 +14,7 @@ connections = []
 
 lock = threading.Lock()
 
+
 def get_stop(id):
     result = [stop for stop in stops if stop.id == id]
     if result is None:
@@ -26,9 +27,11 @@ def fetch_stop(name):
     with lock:
         queue.append(request.StopRequest(name))
 
+
 def fetch_departures(stop):
     with lock:
-        queue.append(request.DepartureRequest(stop))
+        queue.append(request.DepartureRequest(stop, int(time.time()), 15))
+
 
 def fetch_connections(id):
     with lock:
@@ -41,19 +44,24 @@ def save_stop(stop):
 
 
 def process_departures(departures):
-    pass
+    for departure_id in departures:
+        fetch_connections(departure_id)
+
 
 def save_connection(connection):
-    pass
+    connections.append(connection)
+
 
 def save_serialization(serialization):
-    print(serialization)
     if type(serialization) == stop.Stop:
-        save_stop(stop)
+        save_stop(serialization)
+    elif type(serialization) == list:
+        process_departures(serialization)
     elif type(serialization) == trip.Connection:
-        pass
+        save_connection(serialization)
     else:
         fetch_connections(serialization)
+
 
 def process_queue():
     while QUEUE_PROCESSING:
@@ -61,10 +69,8 @@ def process_queue():
             with lock:
                 request = queue.pop(0)
             request.fetch()
-            save_serialization(request.serialize()) # Ergebnis verwenden
+            save_serialization(request.serialize())  # Ergebnis verwenden
             time.sleep(1)
             continue
         print(".", end="")
         time.sleep(2)
-
-
