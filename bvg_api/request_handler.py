@@ -1,33 +1,37 @@
 import requests
-import asyncio
+import threading
 import time
 import traffic.stop as stop
 import bvg_api.loader as loader
 
 STOP_URL = "http://v6.bvg.transport.rest/locations"
+QUEUE_PROCESSING = True
 
 queue = []
+lock = threading.Lock()
 
 
-def request_stop(name):
-    queue.append(StopRequest(name))
-    print("queueing of " + name)
+def fetch_stop(name):
+    with lock:
+        queue.append(StopRequest(name))
 
 
-async def process_queue():
-    while True:
-        if len(queue) > 1:
-            print("Abarbeiten der queue")
-            request = queue.pop(0)
-            request.run()
-            await asyncio.sleep(2)
-        print("Queue leer")
-        await asyncio.sleep(10)
+def process_queue():
+    while QUEUE_PROCESSING:
+        if len(queue) > 0:
+            with lock:
+                request = queue.pop(0)
+            request.fetch()
+            request.serialize()
+            time.sleep(1)
+            continue
+        print(".", end="")
+        time.sleep(2)
 
 
 class Request:
 
-    def run(self):
+    def fetch(self):
         pass
 
     def serialize(self):
@@ -40,7 +44,7 @@ class StopRequest(Request):
         self.key = key
         self.response = None
 
-    def run(self):
+    def fetch(self):
         super()
         parameters = {"query": self.key, "stops": "true", "adresses": "false", "poi": "false", "linesOfStops": "true"}
         request = requests.get(STOP_URL, parameters)

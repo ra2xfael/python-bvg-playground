@@ -1,23 +1,22 @@
 import bvg_api.request_handler as request_handler
+import threading
 
 serialized_stops = []
+lock = threading.Lock()
 
-
-def initialize_serialization_stop(name):
-    request_handler.request_stop(name)
 
 
 def load_stop(name):
-
     for stop in serialized_stops:
-        if stop.key == name:
+        if stop.name == name:
             print("Stop gefunden")
             return stop
     print("Serialisieren von " + name)
-    initialize_serialization_stop(name)
+    request_handler.fetch_stop(name)
 
 
 
 def add_stop(stop):
-    serialized_stops.append(stop)
     print("new stop serialized: " + stop.name)
+    with lock:
+        serialized_stops.append(stop)
