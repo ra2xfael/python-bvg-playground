@@ -3,6 +3,7 @@ import time
 import bvg_api.request as request
 import traffic.stop as stop
 import traffic.trip as trip
+import mapping.mapping as mapping
 
 QUEUE_PROCESSING = True
 
@@ -39,8 +40,13 @@ def fetch_connections(id):
 
 
 def save_stop(stop):
+    for saved_stop in stops:
+        if saved_stop.id == stop.id:
+            print(f"{stop.name} bereits gespeichert.")
+            return
     fetch_departures(stop)
     stops.append(stop)
+
 
 
 def process_departures(departures):
@@ -50,6 +56,8 @@ def process_departures(departures):
 
 def save_connection(connection):
     connections.append(connection)
+    for stop in connection.route:
+        save_stop(stop)
 
 
 def save_serialization(serialization):
