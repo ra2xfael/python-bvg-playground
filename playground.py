@@ -11,6 +11,7 @@ RUNNING = True
 
 def visit_stop(mapper, visited_stops, stop):
     if stop not in visited_stops:
+        print(f"{stop.name} besucht!")
         visited_stops.add(stop)
         mapper.map_stop(stop)
 
@@ -24,17 +25,29 @@ def runner():
     visit_stop(mapper, visited_stops, main_stop)
     while RUNNING:
         # main_stop = request_handler.stops[0]
-        next_stops = main_stop.get_next_stops()
-        for stop in next_stops:
-            if stop is None:
-                continue
-            visit_stop(mapper, visited_stops, stop)
+        for i in range(0, 2):
+            visited_stops_to_add = set()
+            for current_stop in visited_stops:
+                if current_stop.distance == i:
+                    next_stops = current_stop.get_next_stops()
+                    for stop in next_stops:
+                        if stop is None:
+                            continue
+                        stop.distance = i + 1
+                        visit_stop(mapper, visited_stops_to_add, stop)
+            visited_stops.update(visited_stops_to_add)
+
+        # next_stops = main_stop.get_next_stops()
+        # for stop in next_stops:
+        #     if stop is None:
+        #         continue
+        #     visit_stop(mapper, visited_stops, stop)
 
         # [mapper.map_stop(reachable_stop) for reachable_stop in next_stops]
         time.sleep(1)
 
 
-request_handler.fetch_stop("Mehringdamm")
+request_handler.fetch_stop("Marchbrücke")
 
 queue_thread = threading.Thread(target=request_handler.process_queue, daemon=True)
 queue_thread.start()

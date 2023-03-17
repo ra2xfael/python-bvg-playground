@@ -10,6 +10,6 @@ class Map:
         self.map.save("map.html")
 
     def map_stop(self, stop):
-        print(f"Added {stop.name}")
+        #print(f"Added {stop.name}")
         folium.Marker(location=stop.location).add_to(self.map)
         self.map.save("map.html")
