@@ -1,5 +1,8 @@
 import threading
 import time
+
+import folium
+
 import bvg_api.request as request
 import traffic.stop as stop
 import traffic.trip as trip
@@ -13,7 +16,10 @@ stops = []
 departures_id = []
 connections = []
 
+chart = None
+
 lock = threading.Lock()
+
 
 
 def get_stop(id):
@@ -31,7 +37,7 @@ def fetch_stop(name):
 
 def fetch_departures(stop):
     with lock:
-        queue.append(request.DepartureRequest(stop, int(time.time()), 15))
+        queue.append(request.DepartureRequest(stop, int(time.time()), 10))
 
 
 def fetch_connections(id):
@@ -39,14 +45,22 @@ def fetch_connections(id):
         queue.append(request.ConnectionRequest(id))
 
 
-def save_stop(stop):
+def add_stop(stop):
     for saved_stop in stops:
         if saved_stop.id == stop.id:
-            print(f"{stop.name} bereits gespeichert.")
-            return
-    fetch_departures(stop)
+            # print(f"{stop.name} bereits gespeichert.")
+            return False
     stops.append(stop)
 
+def add_departure_to_stop(stop, connection):
+    for saved_stop in stops:
+        if saved_stop.id == stop.id:
+            saved_stop.departures.add(connection)
+
+
+def save_stop(stop):
+    if not add_stop(stop):
+        fetch_departures(stop)
 
 
 def process_departures(departures):
@@ -56,8 +70,10 @@ def process_departures(departures):
 
 def save_connection(connection):
     connections.append(connection)
-    for stop in connection.route:
-        save_stop(stop)
+    print(f"Speicher von {connection}")
+    for stop_in_connection in connection.route:
+        add_stop(stop_in_connection)
+        add_departure_to_stop(stop_in_connection, connection)
 
 
 def save_serialization(serialization):
