@@ -12,9 +12,9 @@ QUEUE_PROCESSING = True
 
 queue = []
 
-stops = []
+stops = {}
 departures_id = []
-connections = []
+connections = {}
 
 chart = None
 
@@ -22,12 +22,11 @@ lock = threading.Lock()
 
 
 
-def get_stop(id):
-    result = [stop for stop in stops if stop.id == id]
-    if result is None:
-        fetch_stop(id)
+def get_stop(key):
+    if key in stops:
+        return stops["id"]
     else:
-        return result
+        fetch_stop(key)
 
 
 def fetch_stop(name):
@@ -45,21 +44,22 @@ def fetch_connections(id):
         queue.append(request.ConnectionRequest(id))
 
 
-def add_stop(stop):
-    for saved_stop in stops:
-        if saved_stop.id == stop.id:
-            # print(f"{stop.name} bereits gespeichert.")
-            return False
-    stops.append(stop)
+def add_stop(stop_to_add):
+    if stop_to_add.id in stops:
+        return False
+    stops[stop_to_add.id] = stop_to_add
+    return True
 
 def add_departure_to_stop(stop, connection):
-    for saved_stop in stops:
-        if saved_stop.id == stop.id:
-            saved_stop.departures.add(connection)
+    # for saved_stop in stops:
+    #     if saved_stop.id == stop.id:
+    #         saved_stop.departures.add(connection)
+    if stop.id in stops:
+        stops[stop.id].departures.add(connection)
 
 
 def save_stop(stop):
-    if not add_stop(stop):
+    if add_stop(stop):
         fetch_departures(stop)
 
 
@@ -69,7 +69,7 @@ def process_departures(departures):
 
 
 def save_connection(connection):
-    connections.append(connection)
+    connections[connection.id] = connection
     print(f"Speicher von {connection}")
     for stop_in_connection in connection.route:
         add_stop(stop_in_connection)

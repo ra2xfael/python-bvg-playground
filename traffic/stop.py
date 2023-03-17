@@ -8,6 +8,7 @@ class Stop:
         self.name = name
         self.location = location
         self.departures = set()
+        self.distance = -1
 
     def __repr__(self):
         return "[" + str(self.id) + ": " + str(self.name) + " " + str(self.location) + "]"
