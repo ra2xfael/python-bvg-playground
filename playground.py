@@ -6,6 +6,7 @@ import time
 
 RUNNING = True
 
+
 # TODO: set mit bereits besuchten Haltestellen!
 
 def visit_stop(mapper, visited_stops, stop):
@@ -13,12 +14,13 @@ def visit_stop(mapper, visited_stops, stop):
         visited_stops.add(stop)
         mapper.map_stop(stop)
 
+
 def runner():
     visited_stops = set()
-
-    main_stop = request_handler.stops[0]
+    main_stop = [stop for stop in request_handler.stops.values()][0]
     print(f"Suche von {main_stop}")
     mapper = mapping.Map(main_stop)
+    main_stop.distance = 0
     visit_stop(mapper, visited_stops, main_stop)
     while RUNNING:
         # main_stop = request_handler.stops[0]
@@ -32,14 +34,12 @@ def runner():
         time.sleep(1)
 
 
-request_handler.fetch_stop("Zoologischer Garten")
+request_handler.fetch_stop("Mehringdamm")
 
 queue_thread = threading.Thread(target=request_handler.process_queue, daemon=True)
 queue_thread.start()
 
-print("start sleeping")
 time.sleep(5)
-print("waking up")
 runner()
 
 # mapping.init_map(main_stop)
