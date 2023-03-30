@@ -26,7 +26,7 @@ class StopRequest(Request):
     def fetch(self):
         super()
         STOP_URL = "http://v6.bvg.transport.rest/locations"
-        print(f"Fetching {STOP_URL}...")
+        print(f"Fetching {STOP_URL} [{self.key}]...")
         parameters = {"query": self.key, "stops": "true", "adresses": "false", "poi": "false", "linesOfStops": "true"}
         request = requests.get(STOP_URL, parameters)
         self.response = [location for location in request.json() if location["type"] == "stop"][0]
@@ -48,15 +48,15 @@ class StopRequest(Request):
 
 class DepartureRequest(Request):
 
-    def __init__(self, station, time, duration):
-        self.station = station
+    def __init__(self, stop_id, time, duration):
+        self.stop_id = stop_id
         self.time = time
         self.duration = duration
         self.response = None
 
     def fetch(self):
         super()
-        DEPARTURES_URL = f"http://v6.bvg.transport.rest/stops/{self.station.id}/departures"
+        DEPARTURES_URL = f"http://v6.bvg.transport.rest/stops/{self.stop_id}/departures"
         print(f"Fetching {DEPARTURES_URL}...")
         parameters = {"when": self.time, "duration": self.duration, "linesOfStops": "true"}
         request = requests.get(DEPARTURES_URL, parameters)
@@ -93,13 +93,13 @@ class DepartureRequest(Request):
 
 class ConnectionRequest(Request):
 
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, trip_id):
+        self.trip_id = trip_id
         self.response = None
 
     def fetch(self):
         super()
-        LINE_URL = f"http://v6.bvg.transport.rest/trips/{self.id}"
+        LINE_URL = f"http://v6.bvg.transport.rest/trips/{self.trip_id}"
         print(f"Fetching {LINE_URL}...")
         parameters = {}
         request = requests.get(LINE_URL, parameters)
@@ -107,7 +107,7 @@ class ConnectionRequest(Request):
         return self.response
 
     def serialize(self):
-        id = self.id
+        id = self.trip_id
         name = self.response["trip"]["line"]["name"]
         type = self.response["trip"]["line"]["productName"]
         route = []
