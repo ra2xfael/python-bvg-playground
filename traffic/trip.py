@@ -9,7 +9,7 @@ class Connection:
 
     def get_index_in_route(self, searched_stop):
         for stop in self.route:
-            if stop.id == searched_stop.id:
+            if stop.trip_id == searched_stop.trip_id:
                 return self.route.index(stop)
         return -1
 
